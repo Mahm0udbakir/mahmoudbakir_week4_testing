@@ -1,24 +1,21 @@
 /// Test configuration and constants
-/// 
+///
 /// This file contains configuration settings and constants used across
 /// all test files to ensure consistency and maintainability.
 class TestConfig {
-  /// Default timeout for async operations in tests
+  /// The standard timeout for async operations in tests.
   static const Duration defaultTimeout = Duration(seconds: 30);
-  
-  /// Timeout for form submission simulation
+
+  /// Specifically for form submission simulation
   static const Duration formSubmissionTimeout = Duration(seconds: 3);
-  
-  /// Timeout for widget settling
+
+  /// The timeout for widget settling.
   static const Duration widgetSettleTimeout = Duration(milliseconds: 100);
-  
-  /// Enable verbose test output
+
+  /// Controls whether tests should output detailed information during execution.
   static const bool verboseOutput = true;
   
-  /// Test data directory path
   static const String testDataPath = 'test/data/';
-  
-  /// Mock API response delay
   static const Duration mockApiDelay = Duration(seconds: 2);
 }
 
