@@ -18,14 +18,38 @@ class _UserRegistrationFormState extends State<UserRegistrationForm> {
   String _message = '';
 
   bool isValidEmail(String email) {
-    return email.contains('@');
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    return emailRegex.hasMatch(email);
   }
 
   bool isValidPassword(String password) {
+    // Check minimum length
+    if (password.length < 8) return false;
+    
+    // Check for at least one uppercase letter
+    if (!password.contains(RegExp(r'[A-Z]'))) return false;
+    
+    // Check for at least one lowercase letter
+    if (!password.contains(RegExp(r'[a-z]'))) return false;
+    
+    // Check for at least one number
+    if (!password.contains(RegExp(r'[0-9]'))) return false;
+    
+    // Check for at least one special character
+    if (!password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) return false;
+    
     return true;
   }
 
   Future<void> _submitForm() async {
+    // Validate the form before submission
+    if (!_formKey.currentState!.validate()) {
+      setState(() {
+        _message = 'Please fix the errors above before submitting';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _message = '';
@@ -89,7 +113,7 @@ class _UserRegistrationFormState extends State<UserRegistrationForm> {
               decoration: const InputDecoration(
                 labelText: 'Password',
                 border: OutlineInputBorder(),
-                helperText: 'At least 8 characters with numbers and symbols',
+                helperText: 'At least 8 characters with uppercase, lowercase, numbers, and special characters',
               ),
               obscureText: true,
               validator: (value) {
@@ -97,7 +121,7 @@ class _UserRegistrationFormState extends State<UserRegistrationForm> {
                   return 'Please enter a password';
                 }
                 if (!isValidPassword(value)) {
-                  return 'Password is too weak';
+                  return 'Password must be at least 8 characters with uppercase, lowercase, numbers, and special characters';
                 }
                 return null;
               },
@@ -130,15 +154,30 @@ class _UserRegistrationFormState extends State<UserRegistrationForm> {
             if (_message.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 16),
-                child: Text(
-                  _message,
-                  style: TextStyle(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
                     color: _message.contains('successful')
-                        ? Colors.green
-                        : Colors.red,
-                    fontWeight: FontWeight.bold,
+                        ? Colors.green.shade50
+                        : Colors.red.shade50,
+                    border: Border.all(
+                      color: _message.contains('successful')
+                          ? Colors.green
+                          : Colors.red,
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  textAlign: TextAlign.center,
+                  child: Text(
+                    _message,
+                    style: TextStyle(
+                      color: _message.contains('successful')
+                          ? Colors.green.shade800
+                          : Colors.red.shade800,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
           ],
