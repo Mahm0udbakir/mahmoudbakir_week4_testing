@@ -20,17 +20,26 @@ class ShoppingCart extends StatefulWidget {
   const ShoppingCart({super.key});
 
   @override
-  State<ShoppingCart> createState() => _ShoppingCartState();
+  State<ShoppingCart> createState() => ShoppingCartState();
 }
 
-class _ShoppingCartState extends State<ShoppingCart> {
+class ShoppingCartState extends State<ShoppingCart> {
   final List<CartItem> _items = [];
 
   void addItem(String id, String name, double price, {double discount = 0.0}) {
     setState(() {
-      _items.add(
-        CartItem(id: id, name: name, price: price, discount: discount),
-      );
+      // Check if item already exists
+      final existingItemIndex = _items.indexWhere((item) => item.id == id);
+      
+      if (existingItemIndex != -1) {
+        // Update quantity of existing item
+        _items[existingItemIndex].quantity += 1;
+      } else {
+        // Add new item
+        _items.add(
+          CartItem(id: id, name: name, price: price, discount: discount),
+        );
+      }
     });
   }
 
@@ -47,7 +56,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
         if (newQuantity <= 0) {
           _items.removeAt(index);
         } else {
-          _items[index].quantity = newQuantity;
+          // Enforce maximum quantity limit (e.g., 99 items)
+          _items[index].quantity = newQuantity.clamp(1, 99);
         }
       }
     });
@@ -70,13 +80,15 @@ class _ShoppingCartState extends State<ShoppingCart> {
   double get totalDiscount {
     double discount = 0;
     for (var item in _items) {
-      discount += item.discount * item.quantity;
+      // Calculate discount as: price * discount_percentage * quantity
+      discount += item.price * item.discount * item.quantity;
     }
     return discount;
   }
 
   double get totalAmount {
-    return subtotal + totalDiscount;
+    // Total = Subtotal - Discount (discount reduces the total)
+    return subtotal - totalDiscount;
   }
 
   int get totalItems {
