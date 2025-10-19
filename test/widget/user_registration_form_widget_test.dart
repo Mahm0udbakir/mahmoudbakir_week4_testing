@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_testing_lab/widgets/user_registration_form.dart';
 
+import '../utils/test_config.dart';
+import '../utils/test_helpers.dart';
+
 /// Comprehensive widget tests for UserRegistrationForm
 /// 
 /// These tests follow the Page Object Model pattern and test the complete
@@ -13,22 +16,10 @@ void main() {
       // Each test gets a fresh widget tester instance
     });
 
-    /// Helper method to pump the widget and wait for it to settle
-    Future<void> pumpForm(WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: UserRegistrationForm(),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-    }
-
     group('Form Rendering Tests', () {
       testWidgets('should render all form fields correctly', (WidgetTester tester) async {
         // Arrange & Act
-        await pumpForm(tester);
+        await FormTestHelpers.pumpForm(tester);
 
         // Assert - Check all form fields are present
         expect(find.byType(UserRegistrationForm), findsOneWidget);
@@ -48,7 +39,7 @@ void main() {
 
       testWidgets('should display helper text for password field', (WidgetTester tester) async {
         // Arrange & Act
-        await pumpForm(tester);
+        await FormTestHelpers.pumpForm(tester);
 
         // Assert
         expect(
@@ -59,7 +50,7 @@ void main() {
 
       testWidgets('should have password fields as obscure text', (WidgetTester tester) async {
         // Arrange & Act
-        await pumpForm(tester);
+        await FormTestHelpers.pumpForm(tester);
 
         // Assert - Check that password fields exist
         final passwordFields = find.byType(TextFormField);
@@ -75,23 +66,23 @@ void main() {
     group('Form Validation Tests', () {
       testWidgets('should show validation errors for empty fields', (WidgetTester tester) async {
         // Arrange
-        await pumpForm(tester);
+        await FormTestHelpers.pumpForm(tester);
 
         // Act - Submit form without filling any fields
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
 
         // Assert - Check validation error messages
-        expect(find.text('Please enter your full name'), findsOneWidget);
-        expect(find.text('Please enter your email'), findsOneWidget);
-        expect(find.text('Please enter a password'), findsOneWidget);
-        expect(find.text('Please confirm your password'), findsOneWidget);
-        expect(find.text('Please fix the errors above before submitting'), findsOneWidget);
+        FormTestHelpers.expectValidationError(ValidationMessages.nameRequired);
+        FormTestHelpers.expectValidationError(ValidationMessages.emailRequired);
+        FormTestHelpers.expectValidationError(ValidationMessages.passwordRequired);
+        FormTestHelpers.expectValidationError(ValidationMessages.confirmPasswordRequired);
+        FormTestHelpers.expectGeneralErrorMessage();
       });
 
       testWidgets('should validate name field correctly', (WidgetTester tester) async {
         // Arrange
-        await pumpForm(tester);
+        await FormTestHelpers.pumpForm(tester);
         final nameField = find.byType(TextFormField).first;
 
         // Act & Assert - Test empty name
@@ -99,16 +90,16 @@ void main() {
         await tester.enterText(nameField, '');
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
-        expect(find.text('Please enter your full name'), findsOneWidget);
+        FormTestHelpers.expectValidationError(ValidationMessages.nameRequired);
 
         // Act & Assert - Test name too short
         await tester.enterText(nameField, 'A');
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
-        expect(find.text('Name must be at least 2 characters'), findsOneWidget);
+        FormTestHelpers.expectValidationError(ValidationMessages.nameTooShort);
 
         // Act & Assert - Test valid name
-        await tester.enterText(nameField, 'John Doe');
+        await tester.enterText(nameField, TestData.validName);
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
         expect(find.text('Please enter your full name'), findsNothing);
@@ -117,7 +108,7 @@ void main() {
 
       testWidgets('should validate email field correctly', (WidgetTester tester) async {
         // Arrange
-        await pumpForm(tester);
+        await FormTestHelpers.pumpForm(tester);
         final emailField = find.byType(TextFormField).at(1);
 
         // Act & Assert - Test empty email
@@ -125,7 +116,7 @@ void main() {
         await tester.enterText(emailField, '');
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
-        expect(find.text('Please enter your email'), findsOneWidget);
+        FormTestHelpers.expectValidationError(ValidationMessages.emailRequired);
 
         // Act & Assert - Test invalid email formats
         final invalidEmails = ['a@', '@b', 'test@', 'test@domain', 'plainaddress'];
@@ -133,11 +124,11 @@ void main() {
           await tester.enterText(emailField, email);
           await tester.tap(find.text('Register'));
           await tester.pumpAndSettle();
-          expect(find.text('Please enter a valid email'), findsOneWidget);
+          FormTestHelpers.expectValidationError(ValidationMessages.emailInvalid);
         }
 
         // Act & Assert - Test valid email
-        await tester.enterText(emailField, 'user@example.com');
+        await tester.enterText(emailField, TestData.validEmail);
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
         expect(find.text('Please enter your email'), findsNothing);
@@ -146,7 +137,7 @@ void main() {
 
       testWidgets('should validate password field correctly', (WidgetTester tester) async {
         // Arrange
-        await pumpForm(tester);
+        await FormTestHelpers.pumpForm(tester);
         final passwordField = find.byType(TextFormField).at(2);
 
         // Act & Assert - Test empty password
@@ -154,7 +145,7 @@ void main() {
         await tester.enterText(passwordField, '');
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
-        expect(find.text('Please enter a password'), findsOneWidget);
+        FormTestHelpers.expectValidationError(ValidationMessages.passwordRequired);
 
         // Act & Assert - Test weak passwords
         final weakPasswords = ['password', 'Password', 'Password1', 'Pass1!'];
@@ -169,7 +160,7 @@ void main() {
         }
 
         // Act & Assert - Test valid password
-        await tester.enterText(passwordField, 'Password123!');
+        await tester.enterText(passwordField, TestData.validPassword);
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
         expect(find.text('Please enter a password'), findsNothing);
@@ -181,29 +172,29 @@ void main() {
 
       testWidgets('should validate confirm password field correctly', (WidgetTester tester) async {
         // Arrange
-        await pumpForm(tester);
+        await FormTestHelpers.pumpForm(tester);
         final passwordField = find.byType(TextFormField).at(2);
         final confirmPasswordField = find.byType(TextFormField).at(3);
 
         // Act - Enter valid password
         await tester.tap(passwordField);
-        await tester.enterText(passwordField, 'Password123!');
+        await tester.enterText(passwordField, TestData.validPassword);
 
         // Act & Assert - Test empty confirm password
         await tester.tap(confirmPasswordField);
         await tester.enterText(confirmPasswordField, '');
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
-        expect(find.text('Please confirm your password'), findsOneWidget);
+        FormTestHelpers.expectValidationError(ValidationMessages.confirmPasswordRequired);
 
         // Act & Assert - Test mismatched passwords
         await tester.enterText(confirmPasswordField, 'DifferentPassword123!');
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
-        expect(find.text('Passwords do not match'), findsOneWidget);
+        FormTestHelpers.expectValidationError(ValidationMessages.passwordsMismatch);
 
         // Act & Assert - Test matching passwords
-        await tester.enterText(confirmPasswordField, 'Password123!');
+        await tester.enterText(confirmPasswordField, TestData.validConfirmPassword);
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
         expect(find.text('Please confirm your password'), findsNothing);
@@ -214,8 +205,8 @@ void main() {
     group('Form Submission Tests', () {
       testWidgets('should show loading state during submission', (WidgetTester tester) async {
         // Arrange
-        await pumpForm(tester);
-        await _fillValidForm(tester);
+        await FormTestHelpers.pumpForm(tester);
+        await FormTestHelpers.fillValidForm(tester);
 
         // Act - Submit form
         await tester.tap(find.text('Register'));
@@ -226,42 +217,42 @@ void main() {
         expect(find.text('Register'), findsNothing); // Button text should be replaced by loading indicator
         
         // Wait for the async operation to complete
-        await tester.pumpAndSettle(const Duration(seconds: 3));
+        await tester.pumpAndSettle(TestConfig.formSubmissionTimeout);
       });
 
       testWidgets('should show success message after successful submission', (WidgetTester tester) async {
         // Arrange
-        await pumpForm(tester);
-        await _fillValidForm(tester);
+        await FormTestHelpers.pumpForm(tester);
+        await FormTestHelpers.fillValidForm(tester);
 
         // Act - Submit form and wait for completion
         await tester.tap(find.text('Register'));
-        await tester.pumpAndSettle(const Duration(seconds: 3)); // Wait for simulated API call
+        await tester.pumpAndSettle(TestConfig.formSubmissionTimeout); // Wait for simulated API call
 
         // Assert - Check success message
-        expect(find.text('Registration successful!'), findsOneWidget);
+        FormTestHelpers.expectSuccessMessage();
         expect(find.byType(CircularProgressIndicator), findsNothing);
         expect(find.text('Register'), findsOneWidget); // Button should be back
       });
 
       testWidgets('should not submit form with validation errors', (WidgetTester tester) async {
         // Arrange
-        await pumpForm(tester);
+        await FormTestHelpers.pumpForm(tester);
 
         // Act - Submit form with invalid data
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
 
         // Assert - Should show validation error message, not success
-        expect(find.text('Please fix the errors above before submitting'), findsOneWidget);
+        FormTestHelpers.expectGeneralErrorMessage();
         expect(find.text('Registration successful!'), findsNothing);
         expect(find.byType(CircularProgressIndicator), findsNothing);
       });
 
       testWidgets('should disable submit button during loading', (WidgetTester tester) async {
         // Arrange
-        await pumpForm(tester);
-        await _fillValidForm(tester);
+        await FormTestHelpers.pumpForm(tester);
+        await FormTestHelpers.fillValidForm(tester);
 
         // Act - Submit form
         await tester.tap(find.text('Register'));
@@ -272,19 +263,19 @@ void main() {
         expect(submitButton.onPressed, isNull); // Disabled button has null onPressed
         
         // Wait for the async operation to complete
-        await tester.pumpAndSettle(const Duration(seconds: 3));
+        await tester.pumpAndSettle(TestConfig.formSubmissionTimeout);
       });
     });
 
     group('Form State Management Tests', () {
       testWidgets('should clear form fields after successful submission', (WidgetTester tester) async {
         // Arrange
-        await pumpForm(tester);
-        await _fillValidForm(tester);
+        await FormTestHelpers.pumpForm(tester);
+        await FormTestHelpers.fillValidForm(tester);
 
         // Act - Submit form and wait for completion
         await tester.tap(find.text('Register'));
-        await tester.pumpAndSettle(const Duration(seconds: 3));
+        await tester.pumpAndSettle(TestConfig.formSubmissionTimeout);
 
         // Assert - Form should still be filled (this is typical behavior)
         // Note: In a real app, you might want to clear the form after success
@@ -294,12 +285,12 @@ void main() {
 
       testWidgets('should maintain form state during validation', (WidgetTester tester) async {
         // Arrange
-        await pumpForm(tester);
+        await FormTestHelpers.pumpForm(tester);
         final nameField = find.byType(TextFormField).first;
 
         // Act - Enter text and trigger validation
         await tester.tap(nameField);
-        await tester.enterText(nameField, 'John Doe');
+        await tester.enterText(nameField, TestData.validName);
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
 
@@ -312,14 +303,14 @@ void main() {
     group('Error Message Display Tests', () {
       testWidgets('should display error messages in styled containers', (WidgetTester tester) async {
         // Arrange
-        await pumpForm(tester);
+        await FormTestHelpers.pumpForm(tester);
 
         // Act - Submit form with validation errors
         await tester.tap(find.text('Register'));
         await tester.pumpAndSettle();
 
         // Assert - Check that error message is in a styled container
-        expect(find.text('Please fix the errors above before submitting'), findsOneWidget);
+        FormTestHelpers.expectGeneralErrorMessage();
         
         // Check for styled container (should have decoration)
         final errorContainer = find.ancestor(
@@ -331,15 +322,15 @@ void main() {
 
       testWidgets('should display success message in styled container', (WidgetTester tester) async {
         // Arrange
-        await pumpForm(tester);
-        await _fillValidForm(tester);
+        await FormTestHelpers.pumpForm(tester);
+        await FormTestHelpers.fillValidForm(tester);
 
         // Act - Submit form successfully
         await tester.tap(find.text('Register'));
-        await tester.pumpAndSettle(const Duration(seconds: 3));
+        await tester.pumpAndSettle(TestConfig.formSubmissionTimeout);
 
         // Assert - Check that success message is in a styled container
-        expect(find.text('Registration successful!'), findsOneWidget);
+        FormTestHelpers.expectSuccessMessage();
         
         // Check for styled container
         final successContainer = find.ancestor(
@@ -350,29 +341,4 @@ void main() {
       });
     });
   });
-}
-
-/// Helper function to fill the form with valid data
-/// 
-/// This follows the DRY principle and makes tests more maintainable
-/// by centralizing the common setup logic.
-Future<void> _fillValidForm(WidgetTester tester) async {
-  final nameField = find.byType(TextFormField).first;
-  final emailField = find.byType(TextFormField).at(1);
-  final passwordField = find.byType(TextFormField).at(2);
-  final confirmPasswordField = find.byType(TextFormField).at(3);
-
-  await tester.tap(nameField);
-  await tester.enterText(nameField, 'John Doe');
-  
-  await tester.tap(emailField);
-  await tester.enterText(emailField, 'john.doe@example.com');
-  
-  await tester.tap(passwordField);
-  await tester.enterText(passwordField, 'Password123!');
-  
-  await tester.tap(confirmPasswordField);
-  await tester.enterText(confirmPasswordField, 'Password123!');
-  
-  await tester.pumpAndSettle();
 }

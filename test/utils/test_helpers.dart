@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_testing_lab/widgets/user_registration_form.dart';
 
+import 'test_config.dart';
+
 class FormTestHelpers {
   /// Creates a test app with the UserRegistrationForm widget
   static Widget createTestApp() {
@@ -124,6 +126,65 @@ class FormTestHelpers {
   /// Verifies that a general error message is not displayed
   static void expectNoGeneralErrorMessage() {
     expect(find.text('Please fix the errors above before submitting'), findsNothing);
+  }
+
+  /// Tests step-by-step validation flow
+  static Future<void> testStepByStepValidation(WidgetTester tester) async {
+    // Test 1: Empty form
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle();
+    expect(find.text(ValidationMessages.generalError), findsOneWidget);
+
+    // Test 2: Add name only
+    final nameField = find.byType(TextFormField).first;
+    await tester.tap(nameField);
+    await tester.enterText(nameField, TestData.validName);
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle();
+    expect(find.text(ValidationMessages.nameRequired), findsNothing);
+
+    // Test 3: Add invalid email
+    final emailField = find.byType(TextFormField).at(1);
+    await tester.tap(emailField);
+    await tester.enterText(emailField, TestData.invalidEmail);
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle();
+    expect(find.text(ValidationMessages.emailInvalid), findsOneWidget);
+
+    // Test 4: Fix email
+    await tester.enterText(emailField, TestData.validEmail);
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle();
+    expect(find.text(ValidationMessages.emailInvalid), findsNothing);
+
+    // Test 5: Add weak password
+    final passwordField = find.byType(TextFormField).at(2);
+    await tester.tap(passwordField);
+    await tester.enterText(passwordField, TestData.invalidPassword);
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle();
+    expect(find.text(ValidationMessages.passwordWeak), findsOneWidget);
+
+    // Test 6: Fix password
+    await tester.enterText(passwordField, TestData.validPassword);
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle();
+    expect(find.text(ValidationMessages.passwordWeak), findsNothing);
+
+    // Test 7: Add mismatched confirm password
+    final confirmPasswordField = find.byType(TextFormField).at(3);
+    await tester.tap(confirmPasswordField);
+    await tester.enterText(confirmPasswordField, TestData.invalidConfirmPassword);
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle();
+    expectValidationError(ValidationMessages.passwordsMismatch);
+
+    // Test 8: Fix confirm password
+    await tester.enterText(confirmPasswordField, TestData.validConfirmPassword);
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle(TestConfig.formSubmissionTimeout);
+    expect(find.text(ValidationMessages.passwordsMismatch), findsNothing);
+    expect(find.text(ValidationMessages.successMessage), findsOneWidget);
   }
 }
 

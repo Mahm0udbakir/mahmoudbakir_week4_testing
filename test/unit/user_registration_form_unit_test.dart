@@ -1,4 +1,9 @@
+@Tags([TestTags.critical, TestTags.fast])
+@Tags([TestCategories.unit])
+library;
+
 import 'package:flutter_test/flutter_test.dart';
+import '../utils/test_config.dart';
 
 /// Unit tests for validation logic in UserRegistrationForm
 /// 
