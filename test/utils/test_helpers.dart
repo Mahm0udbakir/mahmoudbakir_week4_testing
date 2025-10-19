@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_testing_lab/widgets/user_registration_form.dart';
 
-/// Test utilities and helper functions for form testing
-/// 
-/// This class follows the Single Responsibility Principle by providing
-/// reusable test utilities that can be shared across different test files.
 class FormTestHelpers {
   /// Creates a test app with the UserRegistrationForm widget
   static Widget createTestApp() {

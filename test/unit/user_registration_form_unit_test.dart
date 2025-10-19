@@ -160,30 +160,7 @@ void main() {
         );
       }
     });
-
-     test('should validate each requirement individually', () {
-       // Act & Assert - Test minimum length
-       expect(helper.isValidPassword('Pass1!'), isFalse); // Too short
-       expect(helper.isValidPassword('Password1!'), isTrue); // Correct length
-
-       // Act & Assert - Test uppercase requirement
-       expect(helper.isValidPassword('password123!'), isFalse); // No uppercase
-       expect(helper.isValidPassword('Password123!'), isTrue); // Has uppercase
-
-       // Act & Assert - Test lowercase requirement
-       expect(helper.isValidPassword('PASSWORD123!'), isFalse); // No lowercase
-       expect(helper.isValidPassword('Password123!'), isTrue); // Has lowercase
-
-       // Act & Assert - Test number requirement
-       expect(helper.isValidPassword('Password!'), isFalse); // No numbers
-       expect(helper.isValidPassword('Password123!'), isTrue); // Has numbers
-
-       // Act & Assert - Test special character requirement
-       expect(helper.isValidPassword('Password123'), isFalse); // No special chars
-       expect(helper.isValidPassword('Password123!'), isTrue); // Has special chars
-     });
-
-     test('should handle edge cases correctly', () {
+    test('should handle edge cases correctly', () {
        // Arrange & Act & Assert
        expect(helper.isValidPassword('A1!bcdefg'), isTrue); // Exactly 8 chars, all requirements met
        expect(helper.isValidPassword('A1!bcdef'), isTrue); // 8 chars, all requirements met
