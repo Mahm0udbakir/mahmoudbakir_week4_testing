@@ -1,0 +1,50 @@
+name: Flutter CI - Test, Build & Upload APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Grab your code from GitHub
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Step 2: Set up Java 17 (Flutter needs it for Android bits)
+    - name: Set up Java 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'  # Eclipse Temurin—reliable and free!
+
+    # Step 3: Install Flutter (your version: 3.35.6 stable)
+    - name: Install Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.35.6'
+        channel: 'stable'
+
+    # Step 4: Get all your Flutter dependencies (like pub get—refreshes packages)
+    - name: Install dependencies
+      run: flutter pub get
+
+    # Step 5: Run unit tests (if any fail, Robo stops—no build!)
+    - name: Run unit tests
+      run: flutter test
+
+    # Step 6: Build the debug APK (only if tests pass)
+    - name: Build debug APK
+      if: success()
+      run: flutter build apk --debug
+
+    # Step 7: Upload the APK to GitHub's treasure chest (download from Actions tab!)
+    - name: Upload APK
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug.apk
+        path: build/app/outputs/flutter-apk/app-debug.apk  # Standard Flutter spot
+        retention-days: 30  # Keeps it for a month
